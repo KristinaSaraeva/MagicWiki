@@ -2,8 +2,7 @@ from argparse import ArgumentParser, BooleanOptionalAction
 import json
 import math
 import igraph as ig
-import random
-from shortest_path import get_wiki_file_name
+
 
 
 def parser_args() -> tuple[str, str, bool]:
@@ -69,18 +68,23 @@ def visualize_graph(g: ig.Graph, key_vertices: dict) -> ig.Plot:
     
     return plot
 
+
 def start_path(data: dict,start: str,
     end: str,render: bool=False) -> None:
     preprocessed_vertices = preprocess_vertices(data)
     edge_list = [(source, target) for source, targets in preprocessed_vertices.items() for target in targets]
     g = create_graph(edge_list)
     if start is not None or end is not None:
-        start_vertex_id = g.vs.find(name=start).index
-        end_vertex_id = g.vs.find(name=end).index
-        pathes = g.get_shortest_paths(start_vertex_id, to=end_vertex_id, output="vpath")
-        path_indices = pathes[0]
-        path_vertex_names = [g.vs[idx]["name"] for idx in path_indices]
-        print(" -> ".join(path_vertex_names))
+        try:
+            start_vertex_id = g.vs.find(name=start).index
+            end_vertex_id = g.vs.find(name=end).index
+            pathes = g.get_shortest_paths(start_vertex_id, to=end_vertex_id, output="vpath")
+            path_indices = pathes[0]
+            path_vertex_names = [g.vs[idx]["name"] for idx in path_indices]
+            print(f"Shortest path from {start} to {end} is:")
+            print(" -> ".join(path_vertex_names))
+        except:
+            print(f"Vertex {start} or {end} not found. Check the spelling and try again.")
     if render:
         plot=visualize_graph(g,preprocessed_vertices)
         plot.save("wiki_graph.png")
@@ -89,7 +93,7 @@ def start_path(data: dict,start: str,
 
 if __name__ == "__main__":
     try:
-        wiki_file_name = get_wiki_file_name()
+        wiki_file_name = "wiki.json"
         start, end, render = parser_args()
     except KeyError:
         print("Database not found")
